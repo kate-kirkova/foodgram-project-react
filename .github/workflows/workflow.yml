@@ -51,7 +51,7 @@ jobs:
       name: Push to Docker Hub
       uses: docker/build-push-action@v2 
       with:
-        context: api_yamdb/
+        context: backend/
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/backend:latest
 
@@ -69,7 +69,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           stack_file_name: docker-compose.yaml
           script: |
-            sudo docker pull chelish81/yamdb_final:latest
+            sudo docker pull chelish81/backend:latest
             sudo docker-compose stop
             sudo docker-compose rm web
             touch .env
