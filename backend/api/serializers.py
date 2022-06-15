@@ -1,5 +1,3 @@
-from django.db import transaction
-
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -17,7 +15,7 @@ class CommonSubscribed(metaclass=serializers.SerializerMetaclass):
         if request.user.is_anonymous:
             return False
         return Subscribe.objects.filter(
-            user=request.user, author=obj
+            user=request.user, following__id=obj.id
         ).exists()
 
 
@@ -30,7 +28,7 @@ class CommonRecipe(metaclass=serializers.SerializerMetaclass):
         if request.user.is_anonymous:
             return False
         return Favorite.objects.filter(
-            user=request.user, author=obj
+            user=request.user, recipe__id=obj.id
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
@@ -64,13 +62,6 @@ class RegistrationSerializer(UserCreateSerializer, CommonSubscribed):
         result = super(RegistrationSerializer, self).to_representation(obj)
         result.pop('password', None)
         return result
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('username', 'email')
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -174,32 +165,26 @@ class RecipeSerializerPost(serializers.ModelSerializer,
             ingredients_list.append(ingredient_to_check)
         return value
 
-    @transaction.atomic
     def add_tags_and_ingredients(self, tags_data, ingredients, recipe):
         for tag_data in tags_data:
             recipe.tags.add(tag_data)
             recipe.save()
-        list_ingredients = list()
-        obj_id = (
-            IngredientRecipe.objects.latest('id').id + 1
-            if IngredientRecipe.objects.all().exists()
-            else 0
-        )
         for ingredient in ingredients:
-            ingredient_id = ingredient.get('id').id
-            amount = ingredient.get('amount')
-            list_ingredients.append(
-                IngredientRecipe(
-                    id=obj_id,
-                    recipe=recipe,
-                    ingredient_id=ingredient_id,
-                    amount=amount
-                )
-            )
-            obj_id += 1
-        IngredientRecipe.objects.bulk_create(
-            list_ingredients
-        )
+            if not IngredientRecipe.objects.filter(
+                    ingredient_id=ingredient['ingredient']['id'],
+                    recipe=recipe).exists():
+                ingredientrecipe = IngredientRecipe.objects.create(
+                    ingredient_id=ingredient['ingredient']['id'],
+                    recipe=recipe)
+                ingredientrecipe.amount = ingredient['amount']
+                ingredientrecipe.save()
+            else:
+                IngredientRecipe.objects.filter(
+                    recipe=recipe).delete()
+                recipe.delete()
+                raise serializers.ValidationError(
+                    'Данные продукты повторяются в рецепте!')
+        return recipe
 
     def create(self, validated_data):
         author = validated_data.get('author')
