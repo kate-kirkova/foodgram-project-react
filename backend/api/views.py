@@ -6,9 +6,6 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
@@ -39,16 +36,16 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         user_id = self.kwargs.get('users_id')
         user = get_object_or_404(User, id=user_id)
-        Subscribe.objects.get_or_create(
+        Subscribe.objects.create(
             user=request.user, following=user)
         return Response(HTTPStatus.CREATED)
 
     def delete(self, request, *args, **kwargs):
         author_id = self.kwargs['users_id']
         user_id = request.user.id
-        Subscribe.objects.filter(
-            user__id=user_id, following__id=author_id
-        ).delete()
+        subscribe = get_object_or_404(
+            Subscribe, user__id=user_id, following__id=author_id)
+        subscribe.delete()
         return Response(HTTPStatus.NO_CONTENT)
 
 
