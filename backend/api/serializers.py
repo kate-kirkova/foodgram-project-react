@@ -1,7 +1,6 @@
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                             Recipe, Subscribe, Tag, TagRecipe)
 from users.models import User
@@ -239,4 +238,4 @@ class SubscriptionSerializer(serializers.ModelSerializer,
                 :recipes_limit]
         else:
             queryset = Recipe.objects.filter(author__id=obj.id).order_by('id')
-        return RecipeMinifieldSerializer(queryset, many=True).data            
+        return RecipeMinifieldSerializer(queryset, many=True).data
