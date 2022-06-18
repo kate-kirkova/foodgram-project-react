@@ -1,6 +1,7 @@
 from colorfield.fields import ColorField
 from django.db import models
 from django.core.validators import MinValueValidator
+
 from users.models import User
 
 
@@ -70,13 +71,12 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        through='TagRecipe',
-        verbose_name='Теги рецепта',
-        help_text='Выберите подходящие теги'
+        related_name='recipes',
+        verbose_name='Теги',
     )
+
     ingredients = models.ManyToManyField(
-        Ingredient,
-        through='IngredientRecipe',
+        'IngredientRecipe',
         related_name='recipes',
         verbose_name='Необходимые ингредиенты',
         help_text='Выберите нужные продукты'
