@@ -25,6 +25,6 @@ class RecipeFilters(django_filter.FilterSet):
             return queryset.filter(carts__user=self.request.user)
         return queryset.all()
 
- 
+
 class IngredientSearchFilter(filters.SearchFilter):
-    search_param = 'name' 
+    search_param = 'name'
