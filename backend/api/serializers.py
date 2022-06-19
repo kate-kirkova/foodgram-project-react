@@ -1,8 +1,8 @@
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                             Recipe, Subscribe, Tag, TagRecipe)
+from rest_framework import serializers
 from users.models import User
 
 
@@ -168,33 +168,12 @@ class RecipeSerializerPost(serializers.ModelSerializer,
         for tag_data in tags_data:
             recipe.tags.add(tag_data)
             recipe.save()
-        data = [
-                IngredientRecipe(ingredient_id=ingredient['ingredient']['id'], recipe=recipe, amount=ingredient['amount'])
+        data = [IngredientRecipe(ingredient_id=ingredient['ingredient']['id'],
+                                 recipe=recipe, amount=ingredient['amount'])
                 for ingredient in ingredients
                 ]
         IngredientRecipe.objects.bulk_create(data)
         return recipe
-
-    """"    def add_tags_and_ingredients(self, tags_data, ingredients, recipe):
-        for tag_data in tags_data:
-            recipe.tags.add(tag_data)
-            recipe.save()
-        for ingredient in ingredients:
-            if not IngredientRecipe.objects.filter(
-                    ingredient_id=ingredient['ingredient']['id'],
-                    recipe=recipe).exists():
-                ingredientrecipe = IngredientRecipe.objects.create(
-                    ingredient_id=ingredient['ingredient']['id'],
-                    recipe=recipe)
-                ingredientrecipe.amount = ingredient['amount']
-                ingredientrecipe.save()
-            else:
-                IngredientRecipe.objects.filter(
-                    recipe=recipe).delete()
-                recipe.delete()
-                raise serializers.ValidationError(
-                    'Данные продукты повторяются в рецепте!')
-        return recipe"""
 
     def create(self, validated_data):
         author = validated_data.get('author')
